@@ -22,7 +22,7 @@ def get_args():
         help="outputfile")
     return parser.parse_args()
 
-def expandorama(df,kid,mom,dad, writeHeader = True):
+def expandorama(df,kid,mom,dad, mutation, writeHeader = True):
     """Generate .tsv file(s) with pedigree input and STRling data that output max allele differences and if
 	kid has expansion greater than both mom and dad"""
     args = get_args()
@@ -30,7 +30,10 @@ def expandorama(df,kid,mom,dad, writeHeader = True):
     df['allelecomp'] = df['allelecomp'].replace(np.nan, 0)
     ###first, we want to get the max allele value and replace any NaNs with 0 so we can math correctly
 
-    dfkid = df.loc[df['sample'] == kid]
+    dfkid = df.loc[df['sample'] == kid] ###match the data frame to the samples of the individual or "kid"
+    dfkid['mutation'] = mutation
+    ###add a new column matched by sample mutation from mom and dad
+    ### the above line generates a loc error possibily based on a misunderstanding, but be aware of it
     dfmom = df.loc[df['sample'] == mom]
     dfdad = df.loc[df['sample'] == dad]
 	### this is how we match our pedigree samples to our data frame samples, with the sample IDs
@@ -40,8 +43,15 @@ def expandorama(df,kid,mom,dad, writeHeader = True):
     dfmom = dfmom.rename(columns={"allelecomp": "allele_mom"})
     ### since we know that all of the alleles are composite, we rename them to tell apart the trio members
 
-    drop_from_dkid= (['allele1_est', 'allele2_est','spanning_reads', 'spanning_pairs', 'left_clips', 'right_clips', 'unplaced_pairs', 'sum_str_counts', 'sum_str_log', 'depth', 'outlier'])
-    drop_from_parents = (['left', 'right', 'chrom', 'sample', 'p', 'p_adj', 'repeatunit']) + drop_from_dkid
+    drop_from_dkid= ['allele1_est', 'allele2_est','spanning_reads', 'spanning_pairs', 'left_clips', 'right_clips', 'unplaced_pairs', 'sum_str_counts', 'sum_str_log', 'depth', 'outlier']
+    drop_from_parents = ['left', 'right', 'chrom', 'chrom_path', 'right_path', 'left_path', 'disease', 'repeatunit_path', 'overlap', 'sample', 'p', 'p_adj', 'repeatunit'] + drop_from_dkid
+    not_in_df = []
+    for item in drop_from_parents:
+        if item not in df.columns:
+            not_in_df.append(item)
+### with different strling output, we will have different columns, so we want to make sure we avoid any codebreaking column drops
+    for x in not_in_df:
+        drop_from_parents.remove(x)
     dfkid = dfkid.drop(drop_from_dkid, axis=1)
     dfmom = dfmom.drop(drop_from_parents, axis=1)
     dfdad = dfdad.drop(drop_from_parents, axis=1)
@@ -80,9 +90,18 @@ def main():    ###match below or else
             pass
     writeHeader = True
     for sample in ped.samples():
-            if has_parents(sample):
-                expandorama(df, sample.sample_id, sample.maternal_id,sample.paternal_id, writeHeader)
-                writeHeader = False ###don't want to keep writing header
+        if has_parents(sample):
+            if sample.mom.phenotype != '0':
+                mutation = sample.mom.phenotype
+            elif sample.dad.phenotype != '0':
+                mutation = sample.dad.phenotype
+            else:
+                mutation = '0'
+                ### supply mutation from mom and dad in pedigree
+                ###mom will override dad if both are non-zero
+                ### this could be a problem...
+            expandorama(df, sample.sample_id, sample.maternal_id,sample.paternal_id, mutation, writeHeader)
+            writeHeader = False ###don't want to keep writing header
     ###kiddadmom.to_csv(args.out, header=kiddadmom.colnames, sep='\t' index=False)
 
    ### Theoretically at the end, I will have something like the below.
