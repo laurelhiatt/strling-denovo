@@ -1,0 +1,6 @@
+name: strling-denovo
+channels:
+- bioconda
+dependencies:
+  - python=3.7
+  - peddy
