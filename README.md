@@ -6,3 +6,7 @@ Will need a ped file as well as STRling output. For peddy library, must be in py
 The same as above, except in the STRling output the threshold for being classified as a true novel amplification is a difference greater than 150 compared to both parents.
 
 This repository also holds various pieces of code I have used for data analysis and visualization.
+
+## Install
+`conda env create environment.yml`
+`conda activate strling-denovo`

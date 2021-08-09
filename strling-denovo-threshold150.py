@@ -20,6 +20,7 @@ def get_args():
 	### out will just be the name of my output file... turn up
     parser.add_argument("--out",
         help="outputfile")
+    parser.add_argument("--delim", help="Split sample column by this delimiter and retain the first part.")
     return parser.parse_args()
 
 def expandorama(df,kid,mom,dad, mutation, writeHeader = True):
@@ -32,18 +33,19 @@ def expandorama(df,kid,mom,dad, mutation, writeHeader = True):
 
     dfkid = df.loc[df['sample'] == kid] ###match the data frame to the samples of the individual or "kid"
     dfkid['mutation'] = mutation
+    dfkid['mom'] = mom
+    dfkid['dad'] = dad
     ###add a new column matched by sample mutation from mom and dad
     ### the above line generates a loc error possibily based on a misunderstanding, but be aware of it
     dfmom = df.loc[df['sample'] == mom]
     dfdad = df.loc[df['sample'] == dad]
 	### this is how we match our pedigree samples to our data frame samples, with the sample IDs
 
-    dfkid = dfkid.rename(columns={"allelecomp": "allele_kid"})
-    dfdad = dfdad.rename(columns={"allelecomp": "allele_dad"})
-    dfmom = dfmom.rename(columns={"allelecomp": "allele_mom"})
+    dfkid = dfkid.rename(columns={"allelecomp": "allele_kid", "depth": "depth_kid"})
+    dfdad = dfdad.rename(columns={"allelecomp": "allele_dad", "depth": "depth_dad"})
+    dfmom = dfmom.rename(columns={"allelecomp": "allele_mom", "depth": "depth_mom"})
     ### since we know that all of the alleles are composite, we rename them to tell apart the trio members
-
-    drop_from_dkid= ['allele1_est', 'allele2_est','spanning_reads', 'spanning_pairs', 'left_clips', 'right_clips', 'unplaced_pairs', 'sum_str_counts', 'sum_str_log', 'depth', 'outlier']
+    drop_from_dkid= ['allele1_est', 'allele2_est','spanning_reads', 'spanning_pairs', 'left_clips', 'right_clips', 'unplaced_pairs', 'sum_str_counts', 'sum_str_log', 'outlier']
     drop_from_parents = ['left', 'right', 'chrom', 'chrom_path', 'right_path', 'left_path', 'disease', 'repeatunit_path', 'overlap', 'sample', 'p', 'p_adj', 'repeatunit'] + drop_from_dkid
     not_in_df = []
     for item in drop_from_parents:
@@ -78,12 +80,16 @@ def expandorama(df,kid,mom,dad, mutation, writeHeader = True):
     else:
         kiddadmom.to_csv(args.out, mode='a',sep='\t', header=False, index=False)
     ###kiddadmom.to_csv(args.out, mode = 'a', sep='\t', header = write_header, index = False)
-    print(novel_amp_reads, kid) ### to summarize expansions and list the child of trio per dataset
+    #XXX why is this empty?
+    #print(novel_amp_reads, kid) ### to summarize expansions and list the child of trio per dataset
     return my_small_df ### if I want the dataframe as an object, although it is saved to the composite file
 
 def main():    ###match below or else
     args = get_args()
     df = pd.read_table(args.outliers, delim_whitespace = True, dtype = {'sample' : str}, index_col = False)
+    # remove everything after delim from sample names
+    df.loc[:,'sample'] = [x.split(args.delim)[0] for x in df['sample']]
+
     ped = peddy.Ped(args.ped, 'Paternal_ID' == str) ### import the ped file through a peddy function
     ###this is where we input our STRLing outlier data, super exciting!
     with open(args.out, 'w') as newfile:
