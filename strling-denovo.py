@@ -38,12 +38,12 @@ def expandorama(df,kid,mom,dad, mutation, writeHeader = True):
     dfdad = df.loc[df['sample'] == dad]
 	### this is how we match our pedigree samples to our data frame samples, with the sample IDs
 
-    dfkid = dfkid.rename(columns={"allelecomp": "allele_kid"})
-    dfdad = dfdad.rename(columns={"allelecomp": "allele_dad"})
-    dfmom = dfmom.rename(columns={"allelecomp": "allele_mom"})
+    dfkid = dfkid.rename(columns={"allelecomp": "allele_kid", "depth": "depth_kid"})
+    dfdad = dfdad.rename(columns={"allelecomp": "allele_dad", "depth": "depth_dad"})
+    dfmom = dfmom.rename(columns={"allelecomp": "allele_mom", "depth": "depth_mom"})
     ### since we know that all of the alleles are composite, we rename them to tell apart the trio members
 
-    drop_from_dkid= ['allele1_est', 'allele2_est','spanning_reads', 'spanning_pairs', 'left_clips', 'right_clips', 'unplaced_pairs', 'sum_str_counts', 'sum_str_log', 'depth', 'outlier']
+    drop_from_dkid= ['allele1_est', 'allele2_est','spanning_reads', 'spanning_pairs', 'left_clips', 'right_clips', 'unplaced_pairs', 'sum_str_counts', 'sum_str_log', 'outlier']
     drop_from_parents = ['left', 'right', 'chrom', 'chrom_path', 'right_path', 'left_path', 'disease', 'repeatunit_path', 'overlap', 'sample', 'p', 'p_adj', 'repeatunit'] + drop_from_dkid
     not_in_df = []
     for item in drop_from_parents:
