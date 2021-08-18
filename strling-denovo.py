@@ -22,6 +22,9 @@ def get_args():
         help="outputfile")
     parser.add_argument("--ampsize", type=int, default=150,
         help="amplification size filter")
+        ### size of de novo expansion, or difference from kid to mom and dad allele sizes, is defaulted to 150bp
+    parser.add_argument("--depth", type=int, default=10,
+        help="depth filter")
     return parser.parse_args()
 
 def expandorama(df,kid,mom,dad, mutation, writeHeader = True):
@@ -69,7 +72,7 @@ def expandorama(df,kid,mom,dad, mutation, writeHeader = True):
     kiddadmom = kiddadmom.assign(kiddelmom=kiddadmom['allele_kid'] - kiddadmom['allele_mom'])
 	###we are creating a new column that is the difference between child and parent, which gives an idea of the expansions
 
-    kiddadmom['novel_amp'] = (kiddadmom['allele_kid']-kiddadmom['allele_dad']> args.ampsize) & (kiddadmom['allele_kid']-kiddadmom['allele_mom']> args.ampsize)
+    kiddadmom['novel_amp'] = (kiddadmom['allele_kid']-kiddadmom['allele_dad']> args.ampsize) & (kiddadmom['allele_kid']-kiddadmom['allele_mom']> args.ampsize) & (kiddadmom['depth_kid'] > args.depth) & (kiddadmom['depth_mom'] > args.depth) & (kiddadmom['depth_dad'] > args.depth)
 	### we make a new column where the difference between child and parent is positive for both, prints True; these are candidate expansions
 
     novel_amp_reads = kiddadmom.novel_amp.value_counts()
