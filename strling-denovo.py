@@ -20,6 +20,8 @@ def get_args():
 	### out will just be the name of my output file... turn up
     parser.add_argument("--out",
         help="outputfile")
+    parser.add_argument("--ampsize", type=int, default=150,
+        help="amplification size filter")
     return parser.parse_args()
 
 def expandorama(df,kid,mom,dad, mutation, writeHeader = True):
@@ -32,11 +34,13 @@ def expandorama(df,kid,mom,dad, mutation, writeHeader = True):
 
     dfkid = df.loc[df['sample'] == kid] ###match the data frame to the samples of the individual or "kid"
     dfkid['mutation'] = mutation
+    dfkid['mom'] = mom
+    dfkid['dad'] = dad
     ###add a new column matched by sample mutation from mom and dad
     ### the above line generates a loc error possibily based on a misunderstanding, but be aware of it
     dfmom = df.loc[df['sample'] == mom]
     dfdad = df.loc[df['sample'] == dad]
-	### this is how we match our pedigree samples to our data frame samples, with the sample IDs
+    ### this is how we match our pedigree samples to our data frame samples, with the sample IDs
 
     dfkid = dfkid.rename(columns={"allelecomp": "allele_kid", "depth": "depth_kid"})
     dfdad = dfdad.rename(columns={"allelecomp": "allele_dad", "depth": "depth_dad"})
@@ -65,7 +69,7 @@ def expandorama(df,kid,mom,dad, mutation, writeHeader = True):
     kiddadmom = kiddadmom.assign(kiddelmom=kiddadmom['allele_kid'] - kiddadmom['allele_mom'])
 	###we are creating a new column that is the difference between child and parent, which gives an idea of the expansions
 
-    kiddadmom['novel_amp'] = (kiddadmom['allele_kid']-kiddadmom['allele_dad']>0) & (kiddadmom['allele_kid']-kiddadmom['allele_mom']>0)
+    kiddadmom['novel_amp'] = (kiddadmom['allele_kid']-kiddadmom['allele_dad']> args.ampsize) & (kiddadmom['allele_kid']-kiddadmom['allele_mom']> args.ampsize)
 	### we make a new column where the difference between child and parent is positive for both, prints True; these are candidate expansions
 
     novel_amp_reads = kiddadmom.novel_amp.value_counts()
@@ -84,7 +88,7 @@ def expandorama(df,kid,mom,dad, mutation, writeHeader = True):
 def main():    ###match below or else
     args = get_args()
     df = pd.read_table(args.outliers, delim_whitespace = True, dtype = {'sample' : str}, index_col = False)
-    ped = peddy.Ped(args.ped, 'Paternal_ID' == str) ### import the ped file through a peddy function
+    ped = peddy.Ped(args.ped, 'Paternal_ID' == str, ) ### import the ped file through a peddy function
     ###this is where we input our STRLing outlier data, super exciting!
     with open(args.out, 'w') as newfile:
             pass
