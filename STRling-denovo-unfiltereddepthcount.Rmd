@@ -1,0 +1,104 @@
+---
+title: "STRling-denovo-unfiltereddepthcount"
+author: "Laurel Hiatt"
+date: "8/16/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+### Library and File Set Up
+
+```{r files}
+library('ggplot2')
+library('tidyverse')
+setwd("/Users/quinlan/Documents/Git/strling-denovo")
+###wherever files are
+strling_all = read.csv('STRs.tsv', sep = '\t', header = TRUE)
+strling_depth = read.csv('STRsDepth.tsv', sep = '\t', header = TRUE)
+lynch_cov_dist = read.csv('lynchcovdist.csv', header = TRUE)
+lynch_cov_dist<- rename(lynch_cov_dist, sample = Sample)
+### sample must be case-matched for later merging
+```
+
+### Confirm unfiltered trio-matched file with raw STRling output
+```{r readout}
+sum(strling_depth$sample == 3)
+sum(strling_all$sample == 3)
+###group_by(sample) %>% summarize(...)
+```
+
+###Organize objects into new dataframes for plotting, with some analysis
+```{r analyzing strling_depth}
+strling_depth %>% group_by(sample, mutation) %>%
+  summarise(median_depth_kid = median(depth_kid),
+            median_depth_mom = median(depth_mom),
+            median_depth_dad = median(depth_dad),
+            ) %>% 
+  gather(strling_depth_medians, median_depth, median_depth_kid:median_depth_dad) -> sample_strling_depths_median
+
+strling_depth %>% group_by(sample, mutation) %>%
+  summarise(mean_depth_kid = mean(depth_kid),
+            mean_depth_mom = mean(depth_mom),
+            mean_depth_dad = mean(depth_dad),
+            ) %>% 
+  gather(strling_depth_means, mean_depth, mean_depth_kid:mean_depth_dad) -> sample_strling_depths_mean
+
+strling_all %>% group_by(sample) %>%
+  summarise(median_depth = median(depth),
+            ) %>% 
+  gather(strling_depth_medians, median_depth, median_depth) -> sample_strling_all_median
+```
+
+### Plotting depths with mean for kid, mom, and dad
+
+```{r plotting kid depth with mean, echo = FALSE}
+ggplot(strling_depth, aes(x = depth_kid)) + 
+  geom_histogram() + 
+  xlim(0,150) + 
+  geom_vline(aes(xintercept=mean(depth_kid)), color="blue", linetype="dashed", size=1) + theme_bw()
+```
+
+```{r plotting mom depth with mean}
+ggplot(strling_depth, aes(x = depth_mom)) + geom_histogram() + xlim(0,150) + 
+  geom_vline(aes(xintercept=mean(depth_mom)), color="blue", linetype="dashed", size=1) + theme_bw()
+```
+```{r plotting dad depth with mean, echo = FALSE}
+ggplot(strling_depth, aes(x = depth_dad)) + geom_histogram() + xlim(0,150) + 
+  geom_vline(aes(xintercept=mean(depth_dad)), color="blue", linetype="dashed", size=1) + theme_bw()
+```
+### Overlapping histograms of depths, by sample
+```{r Overlapping histograms, echo = FALSE}
+ggplot(strling_depth) + 
+  geom_histogram(aes(x = depth_kid, fill = "kid depth", alpha = 0.2, xintercept=mean(depth_kid))) +
+  geom_histogram(aes(x = depth_mom, fill = "mom depth", alpha = 0.2)) +
+  geom_histogram(aes(x= depth_dad, fill = "dad depth", alpha = 0.2)) + 
+  xlim(0,150) + facet_wrap(strling_depth$sample) + xlab("Trio Depths") +
+  theme_bw()
+```
+### Merging dataframes to compare with CovDist medians
+```{r merging}
+mergeddf <- merge(sample_strling_depths_median,lynch_cov_dist,by="sample")
+mergeddfkid <- mergeddf[mergeddf$strling_depth_medians == 'median_depth_kid',]
+allmergeddf <- merge(sample_strling_all_median,lynch_cov_dist,by="sample")
+```
+###Plotting with CovDist
+```{r plotting CovDist 1, echo=FALSE}
+ggplot(mergeddfkid) + geom_jitter(aes(x = median_depth,y =Median, color = as.factor(sample))) + 
+  xlab('Kid Depth Median') + ylab('CovDist Median') + 
+  geom_abline() + theme_bw()
+```
+```{r plotting CovDist 2, echo=FALSE}
+###All samples with CovDist, so as to not exclude non-trios
+ggplot(allmergeddf) + geom_jitter(aes(x = median_depth,y =Median, color = as.factor(sample))) + 
+  xlab('Sample Depth Median') + ylab('CovDist Median') + 
+  geom_abline() + theme_bw()
+```
+```{r plotting CovDist 3, echo=FALSE}
+ggplot(strling_all, aes(x = depth, color = as.factor(sample))) + geom_density() + 
+  geom_vline(xintercept = 10) + xlim(0,150) + theme(legend.position = "none")
+``` 
+
+
