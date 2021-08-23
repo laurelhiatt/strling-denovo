@@ -30,7 +30,7 @@ sum(strling_all$sample == 3)
 ###group_by(sample) %>% summarize(...)
 ```
 
-###Organize objects into new dataframes for plotting, with some analysis
+### Organize objects into new dataframes for plotting, with some analysis
 ```{r analyzing strling_depth}
 strling_depth %>% group_by(sample, mutation) %>%
   summarise(median_depth_kid = median(depth_kid),
@@ -84,14 +84,14 @@ mergeddf <- merge(sample_strling_depths_median,lynch_cov_dist,by="sample")
 mergeddfkid <- mergeddf[mergeddf$strling_depth_medians == 'median_depth_kid',]
 allmergeddf <- merge(sample_strling_all_median,lynch_cov_dist,by="sample")
 ```
-###Plotting with CovDist
+### Plotting with CovDist
 ```{r plotting CovDist 1, echo=FALSE}
 ggplot(mergeddfkid) + geom_jitter(aes(x = median_depth,y =Median, color = as.factor(sample))) + 
   xlab('Kid Depth Median') + ylab('CovDist Median') + 
   geom_abline() + theme_bw()
 ```
 ```{r plotting CovDist 2, echo=FALSE}
-###All samples with CovDist, so as to not exclude non-trios
+### All samples with CovDist, so as to not exclude non-trios
 ggplot(allmergeddf) + geom_jitter(aes(x = median_depth,y =Median, color = as.factor(sample))) + 
   xlab('Sample Depth Median') + ylab('CovDist Median') + 
   geom_abline() + theme_bw()
