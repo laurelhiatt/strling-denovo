@@ -23,7 +23,7 @@ def get_args():
     parser.add_argument("--ampsize", type=int, default=150,
         help="amplification size filter")
         ### size of de novo expansion, or difference from kid to mom and dad allele sizes, is defaulted to 150bp
-    parser.add_argument("--depth", type=int, default=10,
+    parser.add_argument("--depth", type=int, default=15,
         help="depth filter")
     return parser.parse_args()
 
