@@ -72,7 +72,7 @@ def expandorama(df,kid,mom,dad, mutation, writeHeader = True):
     kiddadmom = kiddadmom.assign(kiddelmom=kiddadmom['allele_kid'] - kiddadmom['allele_mom'])
 	###we are creating a new column that is the difference between child and parent, which gives an idea of the expansions
 
-    kiddadmom['novel_amp'] = (kiddadmom['allele_kid']-kiddadmom['allele_dad']> args.ampsize) & (kiddadmom['allele_kid']-kiddadmom['allele_mom']> args.ampsize) & (kiddadmom['depth_kid'] > args.depth) & (kiddadmom['depth_mom'] > args.depth) & (kiddadmom['depth_dad'] > args.depth)
+    kiddadmom['novel_amp'] = (kiddadmom['allele_kid']-kiddadmom['allele_dad']>= args.ampsize) & (kiddadmom['allele_kid']-kiddadmom['allele_mom']>= args.ampsize) & (kiddadmom['depth_kid'] >= args.depth) & (kiddadmom['depth_mom'] >= args.depth) & (kiddadmom['depth_dad'] >= args.depth)
 	### we make a new column where the difference between child and parent is positive for both, prints True; these are candidate expansions
 
     novel_amp_reads = kiddadmom.novel_amp.value_counts()
