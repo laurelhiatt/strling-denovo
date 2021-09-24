@@ -1,5 +1,6 @@
 import argparse
 import pandas as pd
+pd.options.mode.chained_assignment = None  # default='warn'
 import numpy as np
 import peddy ### must be in python version 3.7 for peddy to actually work
 
